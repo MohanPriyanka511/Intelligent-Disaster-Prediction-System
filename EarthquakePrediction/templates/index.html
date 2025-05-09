@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Earthquake Prediction</title>
+</head>
+<body>
+    <h1>Earthquake Predictor</h1>
+    <form method="POST" action="/predict">
+        <label>Latitude:</label><input type="text" name="latitude" value="{{ latitude or '' }}"><br>
+        <label>Longitude:</label><input type="text" name="longitude" value="{{ longitude or '' }}"><br>
+        <label>Depth (km):</label><input type="text" name="depth" value="{{ depth or '' }}"><br>
+        <label>Year:</label><input type="text" name="year" value="{{ year or '' }}"><br>
+        <label>Month:</label><input type="text" name="month" value="{{ month or '' }}"><br>
+        <label>Day:</label><input type="text" name="day" value="{{ day or '' }}"><br>
+        <label>Hour (0–23):</label><input type="text" name="hour" value="{{ hour or '' }}"><br>
+        <button type="submit">Predict</button>
+    </form>
+
+    {% if magnitude is defined %}
+        <h2>Input Data:</h2>
+        <ul>
+            <li><strong>Latitude:</strong> {{ latitude }}</li>
+            <li><strong>Longitude:</strong> {{ longitude }}</li>
+            <li><strong>Depth (km):</strong> {{ depth }}</li>
+            <li><strong>Year:</strong> {{ year }}</li>
+            <li><strong>Month:</strong> {{ month }}</li>
+            <li><strong>Day:</strong> {{ day }}</li>
+            <li><strong>Hour:</strong> {{ hour }}</li>
+        </ul>
+
+        <h2>Predicted Magnitude: {{ magnitude }}</h2>
+        <h2>Significant Earthquake? {{ significance }}</h2>
+    {% endif %}
+
+    {% if error %}
+        <p style="color:red;">Error: {{ error }}</p>
+    {% endif %}
+</body>
+</html>

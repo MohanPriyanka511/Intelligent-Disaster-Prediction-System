@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flood Prediction Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f0f4f8;
+    }
+
+    h1,
+    h2 {
+      color: #1e3a8a;
+    }
+
+    form {
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      max-width: 600px;
+    }
+
+    label {
+      display: block;
+      margin-top: 12px;
+      font-weight: bold;
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 15px;
+      background-color: #1e3a8a;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    #earthImage {
+      border: 4px solid #1e3a8a;
+      border-radius: 12px;
+      margin-top: 30px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+      width: 100%;
+      max-width: 800px;
+    }
+
+    iframe {
+      margin-top: 20px;
+      border: 0;
+      width: 100%;
+      height: 400px;
+    }
+
+    .result {
+      margin-top: 15px;
+      padding: 10px;
+      font-weight: bold;
+      color: green;
+    }
+  </style>
+</head>
+
+<body>
+  <center>
+
+    <h1>Flood Prediction Form</h1>
+    <form id="floodForm">
+      <label for="Latitude">Latitude:</label>
+      <input type="number" id="Latitude" name="Latitude"><br><br>
+
+      <label for="Longitude">Longitude:</label>
+      <input type="number" id="Longitude" name="Longitude"><br><br>
+
+      <label for="Rainfall">Rainfall (mm):</label>
+      <input type="number" id="Rainfall" name="Rainfall (mm)"><br><br>
+
+      <label for="Temperature">Temperature (°C):</label>
+      <input type="number" id="Temperature" name="Temperature (°C)"><br><br>
+
+      <label for="Humidity">Humidity (%):</label>
+      <input type="number" id="Humidity" name="Humidity (%)"><br><br>
+
+      <label for="River Discharge">River Discharge (m³/s):</label>
+      <input type="number" id="River Discharge" name="River Discharge (m³/s)"><br><br>
+
+      <label for="Water Level">Water Level (m):</label>
+      <input type="number" id="Water Level" name="Water Level (m)"><br><br>
+
+      <label for="Elevation">Elevation (m):</label>
+      <input type="number" id="Elevation" name="Elevation (m)"><br><br>
+
+      <label for="Land Cover">Land Cover:</label>
+      <input type="number" id="Land Cover" name="Land Cover"><br><br>
+
+      <label for="Soil Type">Soil Type:</label>
+      <input type="number" id="Soil Type" name="Soil Type"><br><br>
+
+      <label for="Population Density">Population Density:</label>
+      <input type="number" id="Population Density" name="Population Density"><br><br>
+
+      <label for="Infrastructure">Infrastructure:</label>
+      <input type="number" id="Infrastructure" name="Infrastructure"><br><br>
+
+      <label for="Historical Floods">Historical Floods:</label>
+      <input type="number" id="Historical Floods" name="Historical Floods"><br><br>
+
+      <button type="submit">Submit</button>
+
+
+      <p id="result"></p>
+    </form>
+
+    <script>
+      document.getElementById("floodForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+
+        let formData = new FormData(this);
+        let data = {};
+
+        formData.forEach(function (value, key) {
+          data[key] = value;
+        });
+
+        fetch("/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(data)
+        })
+          .then(response => response.json())
+          .then(result => {
+            document.getElementById("result").innerText = result.prediction === 1 ? "Flood Occurred" : "No Flood";
+          })
+          .catch(error => {
+            document.getElementById("result").innerText = "Error: " + error;
+          });
+      });
+    </script>
+
+<!-- 
+    <h2>Prediction:</h2>
+    <p id="result"></p>
+
+
+
+    <h2>🛰 Real-time Earth Image from NASA</h2>
+    <label for="latitude">Latitude:</label>
+    <input type="text" id="latitude" placeholder="Auto-detecting..." readonly>
+
+    <label for="longitude">Longitude:</label>
+    <input type="text" id="longitude" placeholder="Auto-detecting..." readonly>
+
+    <label for="dateInput">Select Date:</label>
+    <input type="date" id="dateInput" required>
+
+    <button onclick="getUserLocation()">📍 Auto-Detect Location</button>
+    <button onclick="updateEarthImage()">🔄 Update Earth Image</button>
+    <img id="earthImage" alt="Loading Earth Image..." />
+
+    <h2>🗺 Interactive Earth Map</h2>
+    <iframe id="googleMap"></iframe>
+
+    <script>
+      // 📍 Auto-detect user location
+      function getUserLocation() {
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(position => {
+            document.getElementById("latitude").value = position.coords.latitude;
+            document.getElementById("longitude").value = position.coords.longitude;
+            updateGoogleMap(position.coords.latitude, position.coords.longitude);
+          }, () => {
+            alert("Failed to retrieve location. Please enter manually.");
+          });
+        } else {
+          alert("Geolocation not supported.");
+        }
+      }
+
+      // 🌍 Convert city name to latitude & longitude using Google Maps API
+      async function getCoordinatesFromCity(city) {
+        const apiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // Replace with your API key
+        const response = await fetch('https://maps.googleapis.com/maps/api/geocode/json?address=${city}&key=${apiKey}');
+      const data = await response.json();
+
+        if (data.status === "OK") {
+          const location = data.results[0].geometry.location;
+          document.getElementById("latitude").value = location.lat;
+          document.getElementById("longitude").value = location.lng;
+          updateGoogleMap(location.lat, location.lng);
+        } else {
+          alert("City not found! Try entering latitude/longitude manually.");
+        }
+      }
+
+      // 🛰 Fetch NASA EPIC Earth image
+      async function updateEarthImage() {
+        try {
+          const response = await fetch("https://epic.gsfc.nasa.gov/api/natural");
+          const data = await response.json();
+
+          if (data && data.length > 0) {
+            const latestImage = data[data.length - 1]; // Get the most recent image
+            const dateParts = latestImage.date.split(" ")[0].split("-");
+            const imageName = latestImage.image;
+
+            const url = 'https://epic.gsfc.nasa.gov/archive/natural/${dateParts[0]}/${dateParts[1]}/${dateParts[2]}/png/${imageName}.png';
+              console.log("Final Image URL:", url); // Debugging
+            document.getElementById("earthImage").src = url;
+          } else {
+            document.getElementById("earthImage").alt = "No image available.";
+          }
+        } catch (error) {
+          console.error("Error fetching NASA image:", error);
+          document.getElementById("earthImage").alt = "Error loading image.";
+        }
+      }
+
+      // 🗺 Update Google Maps iframe dynamically
+      function updateGoogleMap(lat, lon) {
+        const mapUrl = 'https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${lat},${lon}&zoom=10';
+          document.getElementById("googleMap").src = mapUrl;
+      }
+    </script>
+  </center>
+</body>
+
+</html> -->
+
+<h2>🛰 Real-time Earth Image from NASA</h2>
+<label for="latitude">Latitude:</label>
+<input type="text" id="latitude" placeholder="Auto-detecting..." readonly>
+
+<label for="longitude">Longitude:</label>
+<input type="text" id="longitude" placeholder="Auto-detecting..." readonly>
+
+<label for="dateInput">Select Date:</label>
+<input type="date" id="dateInput" required>
+
+<button onclick="getUserLocation()">📍 Auto-Detect Location</button>
+<button onclick="updateEarthImage()">🔄 Update Earth Image</button>
+<img id="earthImage" alt="Loading Earth Image..." />
+
+<h2>🗺 Interactive Earth Map</h2>
+<iframe id="googleMap"></iframe>
+
+<script>
+  // 📍 Auto-detect user location
+  function getUserLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(position => {
+        document.getElementById("latitude").value = position.coords.latitude;
+        document.getElementById("longitude").value = position.coords.longitude;
+        updateGoogleMap(position.coords.latitude, position.coords.longitude);
+      }, () => {
+        alert("Failed to retrieve location. Please enter manually.");
+      });
+    } else {
+      alert("Geolocation not supported.");
+    }
+  }
+
+  // 🌍 Convert city name to latitude & longitude using Google Maps API
+  async function getCoordinatesFromCity(city) {
+    const apiKey = "YOUR_GOOGLE_MAPS_API_KEY"; // Replace with your API key
+    const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?address=${city}&key=${apiKey}`);
+    const data = await response.json();
+
+    if (data.status === "OK") {
+      const location = data.results[0].geometry.location;
+      document.getElementById("latitude").value = location.lat;
+      document.getElementById("longitude").value = location.lng;
+      updateGoogleMap(location.lat, location.lng);
+    } else {
+      alert("City not found! Try entering latitude/longitude manually.");
+    }
+  }
+
+  // 🛰 Fetch NASA EPIC Earth image
+  async function updateEarthImage() {
+    try {
+      const response = await fetch("https://epic.gsfc.nasa.gov/api/natural");
+      const data = await response.json();
+
+      if (data && data.length > 0) {
+        const latestImage = data[data.length - 1]; // Get the most recent image
+        const dateParts = latestImage.date.split(" ")[0].split("-");
+        const imageName = latestImage.image;
+
+        const url = `https://epic.gsfc.nasa.gov/archive/natural/${dateParts[0]}/${dateParts[1]}/${dateParts[2]}/png/${imageName}.png`;
+        console.log("Final Image URL:", url); // Debugging
+        document.getElementById("earthImage").src = url;
+      } else {
+        document.getElementById("earthImage").alt = "No image available.";
+      }
+    } catch (error) {
+      console.error("Error fetching NASA image:", error);
+      document.getElementById("earthImage").alt = "Error loading image.";
+    }
+  }
+
+  // 🗺 Update Google Maps iframe dynamically
+  function updateGoogleMap(lat, lon) {
+    const mapUrl = `https://www.google.com/maps/embed/v1/view?key=YOUR_GOOGLE_MAPS_API_KEY&center=${lat},${lon}&zoom=10`;
+    document.getElementById("googleMap").src = mapUrl;
+  }
+</script>
+</body>
+
+</html>

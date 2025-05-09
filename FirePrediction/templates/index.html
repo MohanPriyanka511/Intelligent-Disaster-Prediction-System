@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>🔥 Forest Fire Area Predictor</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+      padding: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .container {
+      background-color: #fff;
+      padding: 30px 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+      max-width: 600px;
+      width: 100%;
+    }
+
+    h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    p {
+      text-align: center;
+      font-size: 0.95em;
+      color: #555;
+    }
+
+    form label {
+      font-weight: bold;
+      margin-top: 15px;
+      display: block;
+      color: #444;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-sizing: border-box;
+      font-size: 1em;
+    }
+
+    button {
+      background-color: #ff5722;
+      color: white;
+      font-size: 1em;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      padding: 12px;
+      width: 100%;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #e64a19;
+    }
+
+    #result {
+      margin-top: 20px;
+      font-size: 1em;
+      color: #333;
+      border-top: 1px solid #ccc;
+      padding-top: 20px;
+    }
+
+    .result-item {
+      margin-bottom: 8px;
+    }
+
+    .highlight {
+      font-weight: bold;
+      color: #ff5722;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>🔥 Forest Fire Area Prediction</h2>
+    <p>Enter fire weather and environmental conditions. See the predicted burned area below.</p>
+
+    <form id="predict-form">
+      <label>Fine Fuel Moisture Code (FFMC)</label>
+      <input type="number" name="FFMC" step="any" value="90.2" required />
+
+      <label>Duff Moisture Code (DMC)</label>
+      <input type="number" name="DMC" step="any" value="51.3" required />
+
+      <label>Drought Code (DC)</label>
+      <input type="number" name="DC" step="any" value="102.2" required />
+
+      <label>Initial Spread Index (ISI)</label>
+      <input type="number" name="ISI" step="any" value="5.5" required />
+
+      <label>Temperature (°C)</label>
+      <input type="number" name="temp" step="any" value="22.8" required />
+
+      <label>Relative Humidity (%)</label>
+      <input type="number" name="RH" step="any" value="33" required />
+
+      <label>Wind Speed (km/h)</label>
+      <input type="number" name="wind" step="any" value="5.4" required />
+
+      <label>Rainfall (mm)</label>
+      <input type="number" name="rain" step="any" value="0.0" required />
+
+      <label>Month</label>
+      <select name="month">
+        <option value="jan">January</option>
+        <option value="feb">February</option>
+        <option value="mar">March</option>
+        <option value="apr">April</option>
+        <option value="may">May</option>
+        <option value="jun">June</option>
+        <option value="jul">July</option>
+        <option value="aug" selected>August</option>
+        <option value="sep">September</option>
+        <option value="oct">October</option>
+        <option value="nov">November</option>
+        <option value="dec">December</option>
+      </select>
+
+      <label>Day of the Week</label>
+      <select name="day">
+        <option value="mon">Monday</option>
+        <option value="tue">Tuesday</option>
+        <option value="wed">Wednesday</option>
+        <option value="thu">Thursday</option>
+        <option value="fri">Friday</option>
+        <option value="sat" selected>Saturday</option>
+        <option value="sun">Sunday</option>
+      </select>
+
+      <button type="submit">Predict</button>
+    </form>
+
+    <div id="result"></div>
+  </div>
+
+  <script>
+    document.getElementById("predict-form").onsubmit = async function (event) {
+      event.preventDefault();
+      const form = new FormData(event.target);
+
+      const selectedMonth = form.get("month");
+      const selectedDay = form.get("day");
+
+      let features = {
+        FFMC: parseFloat(form.get("FFMC")),
+        DMC: parseFloat(form.get("DMC")),
+        DC: parseFloat(form.get("DC")),
+        ISI: parseFloat(form.get("ISI")),
+        temp: parseFloat(form.get("temp")),
+        RH: parseFloat(form.get("RH")),
+        wind: parseFloat(form.get("wind")),
+        rain: parseFloat(form.get("rain")),
+        month_aug: selectedMonth === "aug" ? 1 : 0,
+        month_dec: selectedMonth === "dec" ? 1 : 0,
+        day_sat: selectedDay === "sat" ? 1 : 0,
+        day_sun: selectedDay === "sun" ? 1 : 0,
+      };
+
+      const response = await fetch("/predict", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ features }),
+      });
+
+      const result = await response.json();
+
+      const resultDiv = document.getElementById("result");
+      if (result.predicted_burned_area !== undefined) {
+        resultDiv.innerHTML = `
+          <div class="result-item"><strong>Predicted Burned Area:</strong> <span class="highlight">${result.predicted_burned_area} ha</span></div>
+          <div class="result-item">FFMC: ${features.FFMC}</div>
+          <div class="result-item">DMC: ${features.DMC}</div>
+          <div class="result-item">DC: ${features.DC}</div>
+          <div class="result-item">ISI: ${features.ISI}</div>
+          <div class="result-item">Temperature: ${features.temp} °C</div>
+          <div class="result-item">Relative Humidity: ${features.RH} %</div>
+          <div class="result-item">Wind Speed: ${features.wind} km/h</div>
+          <div class="result-item">Rainfall: ${features.rain} mm</div>
+          <div class="result-item">Month: ${selectedMonth.toUpperCase()}</div>
+          <div class="result-item">Day: ${selectedDay.charAt(0).toUpperCase() + selectedDay.slice(1)}</div>
+        `;
+      } else {
+        resultDiv.innerHTML = `<div class="result-item">❌ Error: ${result.error}</div>`;
+      }
+    };
+  </script>
+</body>
+</html>
